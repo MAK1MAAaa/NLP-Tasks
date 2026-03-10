@@ -1,1 +1,32 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+.env
+.pytest_cache/
+
+# Data & Models
 Task*/data/
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+
+# Logs
+*.log
+task0_*.out
+task0_*.err
+
+# OS
+.DS_Store
+Thumbs.db
