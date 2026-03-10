@@ -1,35 +1,66 @@
-Task-1：基于机器学习的文本分类
-原始任务：https://github.com/FudanNLP/nlp-beginner task-1
-修订：@用户8817 @用户2245 
-前置条件
-- 学习《神经网络与深度学习》至63页，重点关注第三章3.1、3.2、3.3的内容
-- 阅读 文本分类
+# Task-1：基于机器学习的文本分类
 
-代码实现阶段
+## 任务要求
+- 学习《神经网络与深度学习》第三章，重点关注线性模型与 Softmax 回归。
+- **数据处理**: 使用 `pandas` 读取 `new_train.tsv` 和 `new_test.tsv`。
+- **特征提取**: 实现 **Bag of Words (BoW)** 和 **N-gram** 特征提取。
+- **模型实现**: 手动实现 Softmax 回归，**禁止直接调用 `torch.nn` 中的高阶函数**（如 `nn.Linear`, `nn.CrossEntropyLoss`）。
+- **实验对比**: 测试不同特征提取方式、学习率对性能的影响，并绘制训练曲线。
 
-0.准备阶段
-- 在本地配置 python 环境（推荐同时安装 Jupyter Notebook）或使用 https://www.kaggle.com 的在线 IDE
-- 学习 pytorch 库中向量与矩阵运算部分的基本操作（这里 pytorch 只是作为 numpy 的替代，只执行基本的线性代数操作，并不允许直接调用 pytorch 中实现完毕的神经网络函数）
-1.数据的下载与读取
-- kaggle 提供的 文本情感分类数据集 存在一定缺陷（如数据量过于庞大、数据情感分布极度不均匀）不作重点关注，建议重点关注调整后的数据集（new_train.tsv 、 new_test.tsv ）作为训练集与测试集。
-- 推荐使用 panda 库用来对 tsv 文件进行读写操作。
-2.数据集的预处理与划分
-比较常见的划分方式是将数据划为训练集、验证集、测试集三个部分。模型利用训练集进行训练，在测试集上验证模型的正确性，训练完毕后在测试集上运行。sklearn.model_selection 库中的 train_test_split 函数可以很轻松地完成这个任务。
-接下来将测试集的句子转换为向量，即实现 Bag of Word 或者 N-gram 。
-3.模型的训练
-- 基本上就是将《神经网络与深度学习》3.3章上的公式 2.2 与3.4 章的 mini-batch 结合起来，比较考验代码能力。
-- 需要注意不能直接调用 torch.nn 中的函数。
-- 代码实现的时候应当有意识地利用 pytorch的矩阵操作同时对一整个 batch 进行操作，可以显著提升代码运行速度。
-- 推荐在执行完固定次数的操作后通过输出模型的 loss、在验证集上的正确率等数据来监测模型的训练成果。
-- 训练完毕后在测试集上运行一遍查看模型的训练成果。
+## 实验环境
+- **Python**: 3.10+
+- **依赖管理**: `uv` (根目录下 `pyproject.toml`)
+- **主要库**: `torch` (仅用于矩阵运算), `pandas`, `scikit-learn`, `matplotlib`
 
-实验阶段
-- 测试 Bag of Word 与 N-gram 的性能差异
-- 测试不同的损失函数、学习率对最终分类性能的影响
-- 将结果绘制成图表（可自行学习 python 画图操作）
+## 运行指南
 
-调整后的数据集
-1. 训练数据和测试数据中仅保留拆分前的完整影评
-2. 用大语言模型重新打分 0-4，更新了训练数据和测试数据的全部标签（注意：不能使用测试数据参与训练，如果需要验证集可以从训练数据中进行划分）
-3. 共有 8528 条训练数据，3309 条测试数据
+### 1. 环境准备
+在项目根目录下，使用 `uv` 同步依赖：
+```bash
+uv sync
+```
 
+### 2. 数据准备
+确保 `Task1/data/` 目录下包含以下文件：
+- `new_train.tsv`: 训练数据集 (文本 \t 标签)
+- `new_test.tsv`: 测试数据集 (文本 \t 标签)
+
+### 3. 运行训练与实验
+执行训练脚本，该脚本会自动运行 BoW 和 N-gram 的对比实验：
+```bash
+uv run python Task1/code/train.py
+```
+
+## 实验结果与分析
+
+### 1. 特征提取对比 (BoW vs. N-gram)
+
+| 特征提取方式 | 词表大小 (Max Features) | 验证集最高准确率 | 测试集准确率 |
+| :--- | :--- | :--- | :--- |
+| **Bag of Words (Unigram)** | 2000 | **0.4549** | **0.4639** |
+| **N-gram (Bigram)** | 2000 | 0.3875 | 0.4062 |
+
+> **分析**: 在本次实验中，**Unigram (BoW)** 的表现显著优于 **Bigram**。这主要是因为在词表大小限制为 2000 的情况下，Unigram 能够覆盖绝大多数高频核心词汇，而 Bigram 特征极其稀疏，2000 个特征不足以捕捉到足够的有效组合，导致模型欠拟合。
+
+### 2. 训练曲线展示
+训练过程中的 Loss 下降情况与 Accuracy 变化曲线已保存至 `Task1/result/experiment_results.png`。
+
+- **Loss 变化**: 随着 Epoch 增加，Unigram 的 Loss 下降速度明显快于 Bigram，最终收敛值也更低。
+- **准确率变化**: Unigram 在验证集上的表现一直保持领先，且在 50 个 Epoch 内未出现明显的过拟合迹象。
+
+### 3. 核心实现说明 (Softmax Regression)
+
+为了符合“不调用 `torch.nn` 函数”的要求，核心逻辑实现如下：
+
+- **前向传播**: `logits = X @ W + b`，随后通过手动实现的 `softmax` 函数转化为概率分布。
+- **损失函数**: 手动实现交叉熵 `loss = -mean(log(probs_target))`。
+- **参数更新**: 利用 `loss.backward()` 计算梯度后，通过 `with torch.no_grad(): W -= lr * W.grad` 手动更新权重并清空梯度。
+
+## 常见问题排查
+
+1. **FileNotFoundError**:
+   - 请检查 `Task1/data/` 目录下是否存在 `.tsv` 文件。
+2. **RuntimeError (Trying to backward through the graph a second time)**:
+   - 确保在参数更新后及时调用 `grad.zero_()`，且参数初始化为 Leaf Tensor。
+3. **Matplotlib 绘图问题**:
+   - 脚本会自动将图片保存至 `Task1/result/` 目录。
