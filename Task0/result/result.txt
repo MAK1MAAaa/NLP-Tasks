@@ -1,0 +1,115 @@
+vLLM
+
+C:\Users\MAK1MA>curl -X POST "http://localhost:8000/v1/chat/completions" -H "Content-Type: application/json" --data "{\"model\": \"Qwen/Qwen3-0.6B\",\"messages\": [{\"role\": \"user\",\"content\": \"What is the capital of France?\"}]}"
+{
+    "id":"chatcmpl-b004eed85a713543",
+    "object":"chat.completion",
+    "created":1773126210,
+    "model":"Qwen/Qwen3-0.6B",
+    "choices":
+        [
+            {
+                "index":0,
+                "message":
+                    {
+                        "role":"assistant",
+                        "content":
+                            "
+                                <think>
+                                \n
+                                Okay, the user is asking about the capital of France. I need to confirm the correct answer. France's capital is Paris. Let me make sure I'm not mixing up any other cities. I know that Paris is the main city for the government, so that's right. I should also mention that it's the largest city in France, which adds context. No need to add anything else here. Just stick to the facts.\n
+                                </think>
+                                \n
+                                \n
+                                The capital of France is **Paris**.
+                            ",
+                        "refusal":null,
+                        "annotations":null,
+                        "audio":null,
+                        "function_call":null,
+                        "tool_calls":[],
+                        "reasoning":null,
+                        "reasoning_content":null
+                    },
+                "logprobs":null,
+                "finish_reason":"stop",
+                "stop_reason":null,
+                "token_ids":null
+            }
+        ],
+    "service_tier":null,
+    "system_fingerprint":null,
+    "usage":
+        {
+            "prompt_tokens":15,
+            "total_tokens":116,
+            "completion_tokens":101,
+            "prompt_tokens_details":null
+        },
+    "prompt_logprobs":null,
+    "prompt_token_ids":null,
+    "kv_transfer_params":null
+}
+
+(APIServer pid=1909) INFO 03-10 15:03:38 [loggers.py:257] Engine 000: Avg prompt throughput: 1.5 tokens/s, Avg generation throughput: 10.1 tokens/s, Running: 0 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.0%, Prefix cache hit rate: 0.0%
+
+Transformer
+
+(.venv) makima@DESKTOP-7R2JPV8:/mnt/d/Github/NLP-Tasks/Task0/code$ python3 transformers_inference.py --model ../data/Qwen3-0.6B
+Loading model from ../data/Qwen3-0.6B...
+`torch_dtype` is deprecated! Use `dtype` instead!
+
+--- Starting Transformers Inference ---
+
+Test 1: Hello, my name is
+Response: Hello, my name is Lina. I'm from China, and I'm 17 years old. I like to play sports and music. I'm also interested in learning English. I want to go to a school in the future. I have a good friend, and I'm looking for a good partner to join my club. I want to know if you can help me with this. I need to know how to find a good partner for a club. Please help me. I'm very interested in learning English and I want to go to a school. Please help me find a good partner. Thank you so much!
+
+Hi! I'm L
+Time taken: 4.33s
+
+Test 2: The capital of France is
+Response: The capital of France is Paris. So, in the context of the question, what is the capital of France? The answer is Paris.
+The answer is Paris.
+The answer is Paris.
+The answer is Paris.
+The answer is Paris.
+The answer is Paris.
+The answer is Paris.
+The answer is Paris.
+
+The answer is Paris.
+The answer is Paris.
+
+The answer is Paris.
+The answer is Paris.
+
+The answer is Paris.
+The answer is Paris.
+The answer is Paris.
+The answer is Paris.
+
+The answer is Paris.
+
+The answer is Paris.
+
+The answer is Paris.
+The answer is Paris.
+
+The answer is Paris.
+
+The answer is Paris.
+
+
+Time taken: 3.96s
+
+Test 3: The future of AI is
+Response: The future of AI is promising, but it's also a challenge. The question is: how do we balance innovation with the need to protect the environment?
+
+The answer lies in understanding the role of AI in the ecosystem. AI has the potential to create new opportunities and solutions for the environment. However, it also brings risks, such as the potential for AI to be used in harmful practices.
+
+The first step is to create a responsible AI development framework. This framework should ensure that AI is developed in a way that aligns with environmental goals. It should also promote transparency and accountability, which are important for ensuring that AI is used ethically and sustainably.
+
+Second,
+Time taken: 3.97s
+
+Total time for 3 prompts: 12.26s

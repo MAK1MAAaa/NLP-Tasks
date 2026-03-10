@@ -18,11 +18,6 @@
 ```bash
 bash setup_wsl.sh
 ```
-该脚本会自动：
-1. 安装 `uv`（如果未安装）。
-2. 创建虚拟环境 `.venv`。
-3. 使用阿里云镜像安装 `vllm`、`transformers` 等依赖。
-4. 从镜像站下载 `Qwen/Qwen3-0.6B` 模型到 `Task0/data`。
 
 ### 2. 启动 vLLM API 服务
 执行以下脚本启动 OpenAI 兼容的 API 服务：
@@ -31,7 +26,9 @@ bash run_vllm_api.sh
 ```
 
 ### 3. 调用 API 测试
-服务启动后，在另一个 WSL 终端或宿主机使用 `curl` 进行测试：
+服务启动后，在另一个 WSL 终端或宿主机使用 `curl` 进行测试。
+
+**推荐方式 (WSL 终端):**
 ```bash
 curl -X POST "http://localhost:8000/v1/chat/completions" \
 	-H "Content-Type: application/json" \
@@ -55,11 +52,14 @@ python3 transformers_inference.py --model ../data/Qwen3-0.6B
 
 ## 效率对比分析
 
-| 特性 | Transformers (Native) | vLLM |
-| :--- | :--- | :--- |
-| **吞吐量 (Throughput)** | 较低 | 极高 (通常提升 10-20 倍) |
-| **显存管理** | 静态分配，碎片化严重 | PagedAttention，动态分配 |
-| **Batching 策略** | Static Batching | Continuous Batching |
+### 实验数据实测 (Qwen3-0.6B)
+
+| 框架 | 单次推理平均耗时 | 总耗时 (3个请求) | 吞吐量 (Throughput) |
+| :--- | :--- | :--- | :--- |
+| **Transformers (Native)** | ~4.09s | **12.26s** | 较低 (串行处理) |
+| **vLLM (API Server)** | ~1.5s (体感) | **~3-4s** (并发) | **10.1 tokens/s** (生成) |
+
+> **注**: vLLM 的吞吐量在并发请求增加时优势会更加明显。在本次实验中，vLLM 的生成吞吐量达到了 10.1 tokens/s。
 
 ### 为什么 vLLM 更快？
 
@@ -71,11 +71,16 @@ python3 transformers_inference.py --model ../data/Qwen3-0.6B
    - **问题**: 静态 Batching 必须等待 Batch 中最长的序列生成结束，短序列会浪费计算资源（Padding）。
    - **解决**: vLLM 在每个迭代步都会检查是否有新请求加入或旧请求结束，实现“随到随走”，极大提升了 GPU 利用率。
 
+3. **CUDA Graph 捕获**:
+   - vLLM 在启动时会捕获 CUDA Graph，减少了 CPU 发射算子到 GPU 的开销，这在 Decode 阶段（逐 token 生成）尤为重要。
+
 ## 常见问题排查 (Troubleshooting)
 
-1. **WSL 显存不足**:
-   - 脚本已针对 12GB 显存优化（`--gpu-memory-utilization 0.3`）。如果仍报错，请关闭浏览器硬件加速或其他占用显存的程序。
-   - 检查 WSL 是否能识别 GPU：执行 `nvidia-smi`。
+1. **curl 连接失败 (Failed to connect)**:
+   - 确保 `run_vllm_api.sh` 脚本已完全启动（看到 `Uvicorn running on http://0.0.0.0:8000`）。
 
-2. **网络连接问题**:
+2. **WSL 显存不足**:
+   - 脚本已针对 12GB 显存优化（`--gpu-memory-utilization 0.3`）。如果仍报错，请关闭浏览器硬件加速或其他占用显存的程序。
+
+3. **网络连接问题**:
    - 如果下载模型缓慢，请确保 `HF_ENDPOINT=https://hf-mirror.com` 已生效。
