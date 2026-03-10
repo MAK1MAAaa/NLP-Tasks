@@ -1,34 +1,54 @@
-Task-3：实现 Transformer 的基础结构
-编写：@用户8817 @用户2245 
+# Task-3：实现 Transformer 的基础结构
 
-前置条件
-- 阅读论文 《Attention Is All You Need》https://arxiv.org/abs/1706.03762
-- 推荐观看视频 Transformer论文逐段精读【论文精读】
-- 论文中没有详细讲解仍需进一步了解的知识点：
-  - batch norm、layer norm、残差连接等操作；
-  - padding mask 与 subsequent mask；
+## 任务要求
+- 深入理解 Transformer 的核心机制：Multi-head Attention、Layer Norm、残差连接、Masking 等。
+- **数据准备**: 自行构造多位数加法数据集（子任务 1）及语言模型语料（子任务 2）。
+- **模型实现**: 
+  - **Encoder-Decoder**: 用于 Seq2Seq 加法任务。
+  - **Decoder-only**: 用于 GPT 风格的语言模型任务。
+- **实验验证**: 探究不同 Tokenizer、模型规模及泛化性对性能的影响。
 
-代码实现阶段
+## 实验环境
+- **Python**: 3.10+
+- **依赖管理**: `uv` (根目录下 `pyproject.toml`)
+- **主要库**: `torch`, `matplotlib`, `numpy`
 
-1.数据的准备载与读取
-- 自己生成
+## 运行指南
 
-2.数据的预处理与划分
-- 需要自行设计不同的实验验证模型的泛化性
+### 1. 子任务 1：多位数加法
+```bash
+uv run python Task3/code/train_addition.py
+```
 
-3.模型的训练
-- PyTorch 中标准的 Transformer 实现大概分成以下模块：
-  - MultiheadAttention、TransformerEncoderLayer/TransformerDecoderLayer 、TransformerEncoder/TransformerDecoder，
-  - 其中 N 个 TransformerEncoderLayer  堆积成 TransformerEncoder，N 个TransformerDecoderLayer 堆积成 TransformerDecoder，最后的 Transformer 类将这些组件连接起来组成完整的模型。以该框架实现可以使代码逻辑更加清晰。
-- 注意 Transformer 的训练和测试一般使用的是不同逻辑。训练时一般对一整个句子同时进行训练，而测试时一般使用 predict next token 的逻辑。
+### 2. 子任务 2：语言模型 (Decoder-only)
+```bash
+uv run python Task3/code/train_language_model.py
+```
 
-实验阶段
+## 实验结果与分析
 
-- 测试不同参数对模型训练效果的影响
-- 在每个子任务中尝试 decoder-only 等 Transformer 模型变种
-- 子任务1：自行构造数据让模型学习 3+3/3+4/4+3/3+5/5+3/4+4 等的多位数加法（"3+3" 指3位数+3位数）
-  - 注意尝试不同的训练/测试集划分，探究模型的泛化性
-- 子任务2：自行构造数据让模型学习一个语言模型（自己准备一个语料集）
-  - 可以选择不同的 Tokenizer 和不同的词表大小
-- 将结果绘制成图表
+### 1. 多位数加法任务 (Subtask 1)
+- **核心结论**: 通过 **反转序列 (Reverse Sequence)** 技巧，Enc-Dec 和 Decoder-only 架构均能实现 **100%** 的 3 位数加法准确率。
+- **泛化性**: 实验证明标准 Transformer 无法泛化到训练未见过的长度（Train 3, Test 4 准确率为 0%）。
 
+### 2. 语言模型任务 (Subtask 2)
+
+| 实验名称 | Tokenizer | 模型规模 | 最终 Loss | 生成效果 |
+| :--- | :--- | :--- | :--- | :--- |
+| **Char-level (Small)** | 字符级 | 2层/d=128 | ~0.1229 | 仅能生成单词片段 |
+| **Char-level (Large)** | 字符级 | 4层/d=256 | ~0.1206 | 仅能生成单词片段 |
+| **Word-level (Small)** | **词级** | 2层/d=128 | **~0.0476** | **生成完整且连贯的长句** |
+
+> **分析**: 
+> 1. **Tokenizer 的影响**: **Word-level** 模型表现远优于字符级。在小规模语料下，词级 Tokenizer 降低了序列的逻辑长度，使模型能更轻松地捕捉长程语义关联。
+> 2. **生成质量**: Word-level 模型成功生成了 "the transformer is a deep learning architecture introduced in 2017..." 等复杂长句，语法完全正确。
+> 3. **收敛速度**: 词级模型在第 10 轮左右即达到极低 Loss，收敛效率极高。
+
+### 3. 训练曲线展示
+- 加法对比曲线：`Task3/result/addition_comparison.png`
+- 语言模型对比曲线：`Task3/result/lm_comparison.png`
+
+## 核心实现说明
+- **Decoder-only 架构**: 使用 `nn.TransformerEncoder` 配合 `Causal Mask`。在推理时，通过 `input_seq[:, -seq_len:]` 动态切片，确保输入长度与训练一致。
+- **Tokenizer 设计**: 实现了支持 `char` 和 `word` 两种模式的 `SimpleTokenizer`，并处理了分词与索引映射。
+- **Masking**: 统一使用布尔掩码，解决了自回归生成中的因果性约束。

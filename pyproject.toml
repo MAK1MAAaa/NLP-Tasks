@@ -12,7 +12,7 @@ dependencies = [
     "tqdm",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "ipykernel",
 ]
