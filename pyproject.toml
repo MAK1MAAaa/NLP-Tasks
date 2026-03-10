@@ -1,0 +1,18 @@
+[project]
+name = "nlp-tasks"
+version = "0.1.0"
+description = "NLP Tasks from FudanNLP"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas",
+    "torch",
+    "scikit-learn",
+    "matplotlib",
+    "notebook",
+    "tqdm",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ipykernel",
+]
